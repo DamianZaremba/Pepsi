@@ -74,19 +74,19 @@ pepsi.addListener('message', function (from, to, message) {
 	console.log(from + ' => ' + to + ': ' + message);
 
 	data = message.split(' ');
-	if ( message.match(/^!cc/) ) {
+	if ( data[0] == "!cc" ) {
 		if ( data[1] ) {
 			pepsi.say(to, data[1] + ': Here we encourage people to speak correctly to enhance intellectual exchange.  Please take the time to read: http://cluenet.org/wiki/Clueful_Chatting');
 		}
-	} else if ( message.match(/^!ccl/) ) {
+	} else if ( data[0] == "!ccl" ) {
 		if ( data[1] ) {
 			pepsi.say(to, data[1] + ': Your style of chatting demonstrates: low levels of intelligence, laziness, and general non-cluefulness.  Please read this article about text-based chatting: http://cluenet.org/wiki/Clueful_Chatting');
 		}
-	} else if ( message.match(/^!ccll/) ) {
+	} else if ( data[0] == "!ccll" ) {
 		if ( data[1] ) {
 			pepsi.say(to, data[1] + ': Your style of chatting seems quite unreadable. Please speak in English and please try to follow the rules in this article: http://cluenet.org/wiki/Clueful_Chatting');
 		}
-	} else if ( message.match(/^!cobi/) ) {
+	} else if ( data[0] == "!cobi/" ) {
 		try {
 			if ( data[1] ) {
 				mailer.send_mail({
@@ -108,7 +108,7 @@ pepsi.addListener('message', function (from, to, message) {
 		} catch (err) {
 			console.log("!memo failed: " + err);
 		}
-	} else if ( message.match(/^!cobimail/) ) {
+	} else if ( data[0] == "!cobimail" ) {
 		try {
 			if ( data[1] ) {
 				mailer.send_mail({
@@ -130,7 +130,7 @@ pepsi.addListener('message', function (from, to, message) {
 		} catch (err) {
 			console.log("!memo failed: " + err);
 		}
-	} else if ( message.match(/^!damian/) ) {
+	} else if ( data[0] == "!damian" ) {
 		try {
 			if ( data[1] ) {
 				mailer.send_mail({
@@ -151,7 +151,7 @@ pepsi.addListener('message', function (from, to, message) {
 		} catch (err) {
 			console.log("!memo failed: " + err);
 		}
-	} else if ( message.match(/^!memo/) ) {
+	} else if ( data[0] == "!memo" ) {
 		try {
 			if ( data[1] && data[2] ) {
 				var time = new Date;
@@ -171,14 +171,14 @@ pepsi.addListener('message', function (from, to, message) {
 		} catch (err) {
 			console.log("!memo failed: " + err);
 		}
-	} else if ( message.match(/^!dns/) || message.match(/^!idns/) || message.match(/^!edns/) ) {
+	} else if ( data[0] == "!dns" || data[0] == "!idns" || data[0] == "!edns" ) {
 		try {
 			if ( data[1] ) {
-				if ( message.match(/^!idns/) ) {
+				if ( data[0] == "!idns" ) {
 					data[1] = data[1] + ".internal.cluenet.org";
 				}
 			
-				if ( message.match(/^!edns/) ) {
+				if ( data[0] == "!edns" ) {
 					data[1] = data[1] + ".external.cluenet.org";
 				}
 			
@@ -195,7 +195,7 @@ pepsi.addListener('message', function (from, to, message) {
 		} catch (err) {
 			console.log('!dns failed: ' + err);
 		}
-	} else if ( message.match(/^!vdns/) ) {
+	} else if ( data[0] == "!vdns" ) {
 		try {
 			if ( data[1] ) {
 				ldap = new ldap.Connection();
@@ -232,7 +232,7 @@ pepsi.addListener('message', function (from, to, message) {
 			} catch (err) { }
 			console.log('!idns failed: ' + err);
 		}
-	} else if ( message.match(/^!v6dns/) ) {
+	} else if ( data[0] == "!v6dns" ) {
 		try {
 			if ( data[1] ) {
 				dns.resolve6(data[1], function (err, addresses) {
