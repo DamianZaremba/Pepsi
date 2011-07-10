@@ -86,7 +86,7 @@ pepsi.addListener('message', function (from, to, message) {
 		if ( data[1] ) {
 			pepsi.say(to, data[1] + ': Your style of chatting seems quite unreadable. Please speak in English and please try to follow the rules in this article: http://cluenet.org/wiki/Clueful_Chatting');
 		}
-	} else if ( data[0] == "!cobi/" ) {
+	} else if ( data[0] == "!cobi" ) {
 		try {
 			if ( data[1] ) {
 				mailer.send_mail({
