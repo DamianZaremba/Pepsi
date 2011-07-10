@@ -3,7 +3,7 @@ require.paths.unshift('./node_modules/');
 var config = require('./config');
 var irc = require('irc');
 var mailer = require('nodemailer');
-var sqlite = require('sqlite3').verbose();
+var sqlite = require('sqlite3');
 var dns = require('dns');
 var ldap = require("LDAP");
 
@@ -199,38 +199,32 @@ pepsi.addListener('message', function (from, to, message) {
 		try {
 			if ( data[1] ) {
 				ldap = new ldap.Connection();
-				if(ldap.open("ldap://ldap.cluenet.org ldap://ldap2.cluenet.org", 2) < 0) {
-					pepsi.say(to, from + ': Sorry, I could not connect to ldap.');
-					console.log("Could not connect to ldap.cluenet.org");
-				}
-				ldap.search("ou=servers,dn=cluenet,dn=org", ldap.ONELEVEL, "(cn=" + data[1] + ".cluenet.org)", "*", function(msgid, err, data) {
-					console.log("(cn=" + data[1] + ".cluenet.org)");
-					switch(err) {
-						case -2:
-							pepsi.say(to, from + ': Sorry, LDAP is MIA.');
-							console.log("LDAP server timedout.");
-						break;
-						case -1:
-							pepsi.say(to, from + ': Sorry, LDAP went for a walk.');
-							console.log("LDAP server went away during search");
-						break;
-						default:
-							if( data ) {
-								console.log(data);
+				if(ldap.open("ldap://ldap.cluenet.org", 3) < 0) {
+					console.log("Could not connect to LDAP");
+					pepsi.say(to, from + ': Sorry, I could not connect to LDAP');
+				} else {
+					console.log( "ou=servers,dc=cluenet,dc=org" );
+					console.log( "(cn=" + data[1] + ".cluenet.org)" );
+					console.log( "*" );
+
+					ldap.search("ou=servers,dc=cluenet,dc=org", ldap.DEFAULT, "(cn=" + data[1] + ".cluenet.org)", "*", 
+					function(id, err, result) {
+						if( err ) {
+							pepsi.say(to, from + ': Sorry, an error occurred: ' + err.message);
+							console.log( err.message );
+						} else {
+							if( result.length == 0 ) {
+								pepsi.say(to, from + ': Sorry, I could not find that server');
 							} else {
-								pepsi.say(to, from + ': Sorry, I could not find that in LDAP.');
-								console.log("No data returned");
+								console.log( result );
 							}
-						break;
-					}
-				});
+						}
+					});
+				}
 				ldap.close()
 			}
 		} catch (err) {
-			try {
-				ldap.close();
-			} catch (err) { }
-			console.log('!idns failed: ' + err);
+			console.log('!vdns failed: ' + err);
 		}
 	} else if ( data[0] == "!v6dns" ) {
 		try {
