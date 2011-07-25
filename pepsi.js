@@ -176,7 +176,7 @@ pepsi.addListener('motd', function(motd) {
 	}
 
 	if( config.nickserv_pass ) {
-		pepsi.say("NickServ", config.nickserv_pass);
+		pepsi.say("NickServ", "IDENTIFY " + config.nickserv_pass);
 	}
 });
 
