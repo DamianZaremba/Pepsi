@@ -1,14 +1,20 @@
-exports.nickname = 'Test123';
+exports.nickname = 'Pepsi';
 exports.realname = 'Pepsi';
 exports.username = 'Pepsi';
 
-exports.nickserv_pass = null;
+exports.nickserv_pass = '';
 exports.user_modes = '+B';
 
-exports.server = 'irc.cluenet.org'
+exports.server = 'irc.cluenet.org';
 exports.channels = [
 	'#damian',
 	'#bots',
 ];
-exports.port = 6667
+exports.port = 6667;
 exports.password = null;
+
+exports.serverport = 1337;
+exports.serverpass = "";
+exports.serverchannels = [
+	'#damian',
+];

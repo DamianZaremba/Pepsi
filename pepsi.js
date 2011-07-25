@@ -6,6 +6,117 @@ var mailer = require('nodemailer');
 var sqlite = require('sqlite3');
 var dns = require('dns');
 var ldap = require("LDAP");
+var net = require("net");
+
+/* IRC server stuff */
+// User function - we use this with prototypes
+function User(socket) {
+	this.socket = socket;
+	this.authenticated = false;
+}
+
+User.prototype.sendMessage = function (msg) {
+	if (this.socket.readyState !== "open" && this.socket.readyState !== "writeOnly") {
+		return false;
+	}
+
+	this.socket.write(msg + "\r\n", "utf8");
+};
+
+User.prototype.parse = function (message) {
+	var parts = message.split(" ");
+	var command = parts[0].toUpperCase();
+	var data = parts.slice(1);
+
+	if(!command || !data) {
+		return;
+	}
+
+	switch (command) {
+		case "PASS":
+			if(data[0] == config.serverpass) {
+				this.authenticated = true;
+				console.log(this.socket.remoteAddress + " authenticated!");
+			} else {
+				console.log(this.socket.remoteAddress + " provided an incorrect password");
+				this.quit();
+			}
+		break;
+
+		case "PRIVMSG":
+			var message = data.splice(1).join(' ').slice(1);
+			for(var i in config.serverchannels) {
+				var channel = config.serverchannels[i];
+				if(pepsi) {
+					pepsi.say(channel, message);
+				}
+			}
+		break;
+
+		case "PING":
+			this.sendMessage("PONG pepsi.damianzaremba.co.uk");
+		break;
+
+		case "NICK":
+			this.sendMessage(" 001 " + data[0] + " ");
+		break;
+
+		case "QUIT":
+			this.quit(data[0]);
+		break;
+
+		// We don't really care about these		
+		case "JOIN":
+		case "PART":
+		case "USER":
+		break;
+
+		default:
+			console.log(command);
+			console.log(data);
+		break;
+	}
+}
+
+User.prototype.quit = function (msg) {
+	if(!msg) msg = ''
+	this.sendMessage('QUIT: ' + msg);
+	this.socket.end();
+};
+
+// IRC server
+server = net.createServer(function (socket) {
+	socket.setTimeout(30000);
+	socket.setEncoding("utf8");
+	var user = undefined;
+
+	socket.on('connect', function() {
+		console.log("Connection from " + socket.remoteAddress);
+		user = new User(socket);
+	});
+
+	socket.on('end', function() {
+		console.log("Lost connection from " + socket.remoteAddress);
+	});
+
+	var buffer = "";
+	var i;
+	socket.on('data', function(data) {
+		buffer += data;
+
+		while (i = buffer.indexOf("\n")) {
+			if(i < 0) break;
+
+			var message = buffer.slice(0, i);
+			if (message.length > 512) {
+				user.quit("flooding");
+			} else {
+				buffer = buffer.slice(i+1);
+				user.parse(message);
+			}
+		}
+	});
+});
 
 /* Core stuff */
 var memodb = new sqlite.Database("memo.db", function (err) {
@@ -31,21 +142,10 @@ var pepsi = new irc.Client(config.irc_server, config.nickname, {
 	channels: config.channels,
 });
 
-pepsi.addListener('motd', function(motd) {
-	if( config.user_modes ) {
-		pepsi.send('MODE', pepsi.nick, config.user_modes);
-	}
+// Start the IRC server
+server.listen(config.serverport);
 
-	if( config.nickserv_pass ) {
-		pepsi.say("NickServ", config.nickserv_pass);
-	}
-});
-
-pepsi.addListener('error', function(message) {
-	console.error('ERROR: %s: %s', message.command, message.args.join(' '));
-});
-
-/* Memo stuff */
+/* Memo functions */
 function send_memos(nick, channel) {
 	if ( ! nick ) {
 		return;
@@ -69,7 +169,20 @@ function send_memos(nick, channel) {
 pepsi.addListener('notice', send_memos);
 pepsi.addListener('message', send_memos);
 
-/* Our event listners */
+/* Bot event listeners */
+pepsi.addListener('motd', function(motd) {
+	if( config.user_modes ) {
+		pepsi.send('MODE', pepsi.nick, config.user_modes);
+	}
+
+	if( config.nickserv_pass ) {
+		pepsi.say("NickServ", config.nickserv_pass);
+	}
+});
+
+pepsi.addListener('error', function(message) {
+	console.error('ERROR: %s: %s', message.command, message.args.join(' '));
+});
 pepsi.addListener('message', function (from, to, message) {
 	console.log(from + ' => ' + to + ': ' + message);
 
