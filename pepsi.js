@@ -155,7 +155,7 @@ memodb.run('CREATE TABLE memos ("id" INTEGER PRIMARY KEY,"from" varchar(2048),"t
 	}
 });
 
-var pepsi = new irc.Client(config.irc_irc_server, config.nickname, {
+var pepsi = new irc.Client(config.irc_server, config.nickname, {
 	debug: true,
 	showErrors: true,
 	password: config.password,
@@ -342,11 +342,11 @@ pepsi.addListener('message', function (from, to, message) {
 					console.log("Could not connect to LDAP");
 					pepsi.say(to, from + ': Sorry, I could not connect to LDAP');
 				} else {
-					console.log( "ou=irc_servers,dc=cluenet,dc=org" );
+					console.log( "ou=servers,dc=cluenet,dc=org" );
 					console.log( "(cn=" + data[1] + ".cluenet.org)" );
 					console.log( "*" );
 
-					ldap.search("ou=irc_servers,dc=cluenet,dc=org", ldap.DEFAULT, "(cn=" + data[1] + ".cluenet.org)", "*", 
+					ldap.search("ou=servers,dc=cluenet,dc=org", ldap.DEFAULT, "(cn=" + data[1] + ".cluenet.org)", "*", 
 					function(id, err, result) {
 						if( err ) {
 							pepsi.say(to, from + ': Sorry, an error occurred: ' + err.message);
