@@ -13,8 +13,14 @@ exports.channels = [
 exports.port = 6667;
 exports.password = null;
 
-exports.serverport = 1337;
-exports.serverpass = "";
-exports.serverchannels = [
+exports.irc_serverport = 1337;
+exports.irc_serverpass = "";
+exports.irc_serverchannels = [
 	'#damian',
+];
+
+exports.rsd_serverport = 1338;
+exports.rsd_serverpass = "NotAVerySecurePassword";
+exports.rsd_serverchannels = [
+        '#damian',
 ];

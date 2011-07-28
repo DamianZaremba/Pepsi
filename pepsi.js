@@ -7,6 +7,7 @@ var sqlite = require('sqlite3');
 var dns = require('dns');
 var ldap = require("LDAP");
 var net = require("net");
+var dgram = require('dgram')
 
 /* IRC server stuff */
 // User function - we use this with prototypes
@@ -34,7 +35,7 @@ User.prototype.parse = function (message) {
 
 	switch (command) {
 		case "PASS":
-			if(data[0] == config.serverpass) {
+			if(data[0] == config.irc_serverpass) {
 				this.authenticated = true;
 				console.log(this.socket.remoteAddress + " authenticated!");
 			} else {
@@ -45,8 +46,8 @@ User.prototype.parse = function (message) {
 
 		case "PRIVMSG":
 			var message = data.splice(1).join(' ').slice(1);
-			for(var i in config.serverchannels) {
-				var channel = config.serverchannels[i];
+			for(var i in config.irc_serverchannels) {
+				var channel = config.irc_serverchannels[i];
 				if(pepsi) {
 					pepsi.say(channel, message);
 				}
@@ -85,7 +86,7 @@ User.prototype.quit = function (msg) {
 };
 
 // IRC server
-server = net.createServer(function (socket) {
+irc_server = net.createServer(function (socket) {
 	socket.setTimeout(30000);
 	socket.setEncoding("utf8");
 	var user = undefined;
@@ -118,6 +119,28 @@ server = net.createServer(function (socket) {
 	});
 });
 
+// RSD server
+rsd_server = dgram.createSocket("udp4");
+
+rsd_server.on('message', function(data, info) {
+	parts = String(data).split(" ");
+
+	if(parts[0] == config.rsd_serverpass) {
+		console.log('Valid data from ' + info.address);
+		parts = parts.slice(1)
+		message = parts.join(" ");
+
+		for(var i in config.rsd_serverchannels) {
+			var channel = config.rsd_serverchannels[i];
+			if(pepsi) {
+				pepsi.say(channel, "RSD: " + message);
+			}
+		}
+	} else {
+		console.log('Invalid data from ' + info.address);
+	}
+});
+
 /* Core stuff */
 var memodb = new sqlite.Database("memo.db", function (err) {
 	if( err ) {
@@ -132,7 +155,7 @@ memodb.run('CREATE TABLE memos ("id" INTEGER PRIMARY KEY,"from" varchar(2048),"t
 	}
 });
 
-var pepsi = new irc.Client(config.irc_server, config.nickname, {
+var pepsi = new irc.Client(config.irc_irc_server, config.nickname, {
 	debug: true,
 	showErrors: true,
 	password: config.password,
@@ -142,8 +165,11 @@ var pepsi = new irc.Client(config.irc_server, config.nickname, {
 	channels: config.channels,
 });
 
-// Start the IRC server
-server.listen(config.serverport);
+// Start the IRC irc_server
+irc_server.listen(config.irc_serverport);
+
+// Start the RSD server
+rsd_server.bind(config.rsd_serverport);
 
 /* Memo functions */
 function send_memos(nick, channel) {
@@ -316,18 +342,18 @@ pepsi.addListener('message', function (from, to, message) {
 					console.log("Could not connect to LDAP");
 					pepsi.say(to, from + ': Sorry, I could not connect to LDAP');
 				} else {
-					console.log( "ou=servers,dc=cluenet,dc=org" );
+					console.log( "ou=irc_servers,dc=cluenet,dc=org" );
 					console.log( "(cn=" + data[1] + ".cluenet.org)" );
 					console.log( "*" );
 
-					ldap.search("ou=servers,dc=cluenet,dc=org", ldap.DEFAULT, "(cn=" + data[1] + ".cluenet.org)", "*", 
+					ldap.search("ou=irc_servers,dc=cluenet,dc=org", ldap.DEFAULT, "(cn=" + data[1] + ".cluenet.org)", "*", 
 					function(id, err, result) {
 						if( err ) {
 							pepsi.say(to, from + ': Sorry, an error occurred: ' + err.message);
 							console.log( err.message );
 						} else {
 							if( result.length == 0 ) {
-								pepsi.say(to, from + ': Sorry, I could not find that server');
+								pepsi.say(to, from + ': Sorry, I could not find that irc_server');
 							} else {
 								console.log( result );
 							}
