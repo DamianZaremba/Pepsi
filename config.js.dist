@@ -20,7 +20,7 @@ exports.irc_serverchannels = [
 ];
 
 exports.rsd_serverport = 1338;
-exports.rsd_serverpass = "NotAVerySecurePassword";
+exports.rsd_serverpass = "";
 exports.rsd_serverchannels = [
         '#damian',
 ];
